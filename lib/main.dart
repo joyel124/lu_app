@@ -2,6 +2,34 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+const primaryColor = Color(0xFF6200EE);
+const secondaryColor = Color(0xFF03DAC5);
+const backgroundColor = Color(0xFFF5F5F5);
+const textColor = Color(0xFF000000);
+
+const headingStyle = TextStyle(
+  fontSize: 24,
+  fontWeight: FontWeight.bold,
+  color: primaryColor,
+);
+
+const bodyStyle = TextStyle(
+  fontSize: 16,
+  color: textColor,
+);
+
+const labelStyle = TextStyle(
+  fontSize: 18,
+  fontWeight: FontWeight.w500,
+  color: textColor,
+);
+
+const labelStyleButton = TextStyle(
+  fontSize: 16,
+  fontWeight: FontWeight.w400,
+  color: Colors.white,
+);
+
 void main() {
   runApp(MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -15,6 +43,7 @@ class MatrixLU extends StatefulWidget {
 }
 
 class _MatrixLUState extends State<MatrixLU> {
+
   late int n;
   late List<List<double>> a;
   late List<List<double>> l;
@@ -29,7 +58,15 @@ class _MatrixLUState extends State<MatrixLU> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Factorización LU'),
+        title: const Text(
+          'Factorización LU',
+          style: TextStyle(
+            color: backgroundColor, // Texto blanco
+            fontWeight: FontWeight.w700, // Semi-Bold
+          ),
+        ),
+        backgroundColor: primaryColor, // Fondo Morado
+        elevation: 0, // Elimina la sombra
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -39,8 +76,13 @@ class _MatrixLUState extends State<MatrixLU> {
             children: <Widget>[
               TextField(
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: 'Ingrese el valor de N',
+                decoration: const InputDecoration(
+                  contentPadding: EdgeInsets.all(10),
+                  hintText: 'Ingrese el valor de N',
+                  border: OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: primaryColor),
+                  ),
                 ),
                 onChanged: (value) {
                   setState(() {
@@ -48,6 +90,7 @@ class _MatrixLUState extends State<MatrixLU> {
                   });
                 },
               ),
+              const SizedBox(height: 12),
               ElevatedButton(
                 onPressed: () {
                   if (n > 0) {
@@ -83,17 +126,28 @@ class _MatrixLUState extends State<MatrixLU> {
                     });
                   }
                 },
-                child: Text('Calcular Factorización LU'),
+                style: ElevatedButton.styleFrom(
+                  primary: primaryColor,
+                  onPrimary: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text('Calcular Factorización LU',
+                  style: labelStyleButton
+                ),
               ),
               if (a != null && l != null && u != null)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Matriz A:'),
+                    const Text('Matriz A:', style: labelStyle),
                     MatrixDisplay(matrix: a),
-                    Text('Matriz L:'),
+                    const SizedBox(height: 12), // espacio entre las matrices y textos
+                    const Text('Matriz L:', style: labelStyle),
                     MatrixDisplay(matrix: l),
-                    Text('Matriz U:'),
+                    const SizedBox(height: 12),
+                    const Text('Matriz U:', style: labelStyle),
                     MatrixDisplay(matrix: u),
                   ],
                 ),
@@ -117,20 +171,38 @@ class MatrixDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Table(
-      border: TableBorder.all(),
-      children: matrix.map((row) {
-        return TableRow(
-          children: row.map((cell) {
-            return TableCell(
-              child: Padding(
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: secondaryColor, width: 2),
+        borderRadius: BorderRadius.circular(10),
+        color: backgroundColor,
+      ),
+      padding: const EdgeInsets.all(8),
+      margin: const EdgeInsets.all(8),
+      child: Table(
+        border: TableBorder.symmetric(
+          inside: const BorderSide(color: primaryColor, width: 1),
+          outside: const BorderSide(color: secondaryColor, width: 2),
+        ),
+        children: matrix.map((row) {
+          return TableRow(
+            children: row.map((cell) {
+              return Container(
                 padding: const EdgeInsets.all(8.0),
-                child: Text(cell.toStringAsFixed(3)),
-              ),
-            );
-          }).toList(),
-        );
-      }).toList(),
+                child: Center(
+                  child: Text(
+                    cell.toStringAsFixed(1),
+                    style: const TextStyle(
+                      color: primaryColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          );
+        }).toList(),
+      ),
     );
   }
 }
