@@ -96,34 +96,43 @@ class _MatrixLUState extends State<MatrixLU> {
                   if (n > 0) {
                     setState(() {
                       a = generarMatriz(n);
-                      l = List.generate(n, (i) => List.filled(n, 0.0));
-                      u = List.generate(n, (i) => List.filled(n, 0.0));
+                      if(esMatrizValida(a)){
+                        l = List.generate(n, (i) => List.filled(n, 0.0));
+                        u = List.generate(n, (i) => List.filled(n, 0.0));
 
-                      for (int i = 0; i < n; i++) {
-                        for (int j = 0; j < n; j++) {
-                          if (i == j) {
-                            l[i][j] = 1.0;
-                            double lkj = 0.0;
-                            for (int k = 0; k < j; k++) {
-                              lkj += l[j][k] * u[k][j];
+                        for (int i = 0; i < n; i++) {
+                          for (int j = 0; j < n; j++) {
+                            if (i == j) {
+                              l[i][j] = 1.0;
+                              double lkj = 0.0;
+                              for (int k = 0; k < j; k++) {
+                                lkj += l[j][k] * u[k][j];
+                              }
+                              u[j][j] = a[j][j] - lkj;
+                            } else if (i < j) {
+                              double lijkj = 0.0;
+                              for (int k = 0; k < i; k++) {
+                                lijkj += l[i][k] * u[k][j];
+                              }
+                              u[i][j] = (a[i][j] - lijkj) / l[i][i];
+                            } else {
+                              double lkj = 0.0;
+                              for (int k = 0; k < j; k++) {
+                                lkj += l[i][k] * u[k][j];
+                              }
+                              l[i][j] = (a[i][j] - lkj) / u[j][j];
                             }
-                            u[j][j] = a[j][j] - lkj;
-                          } else if (i < j) {
-                            double lijkj = 0.0;
-                            for (int k = 0; k < i; k++) {
-                              lijkj += l[i][k] * u[k][j];
-                            }
-                            u[i][j] = (a[i][j] - lijkj) / l[i][i];
-                          } else {
-                            double lkj = 0.0;
-                            for (int k = 0; k < j; k++) {
-                              lkj += l[i][k] * u[k][j];
-                            }
-                            l[i][j] = (a[i][j] - lkj) / u[j][j];
                           }
                         }
                       }
                     });
+                  }else{
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('La matriz no es valida'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
                   }
                 },
                 style: ElevatedButton.styleFrom(
@@ -205,4 +214,71 @@ class MatrixDisplay extends StatelessWidget {
       ),
     );
   }
+}
+
+bool esMatrizValida(List<List<double>> matriz) {
+  int n = matriz.length;
+
+  // Comprobación del determinante de las submatrices principales
+  for (int i = 1; i < n; i++) {
+    List<List<double>> subMatriz = [];
+    for (int x = 0; x < i; x++) {
+      subMatriz.add([]);
+      for (int y = 0; y < i; y++) {
+        subMatriz[x].add(matriz[x][y]);
+      }
+    }
+    if (determinante(subMatriz) == 0) {
+      return false;
+    }
+  }
+
+  // Comprobación de ceros en la diagonal principal
+  for (int i = 0; i < n; i++) {
+    if (matriz[i][i] == 0) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+double determinante(List<List<double>> matriz) {
+  int n = matriz.length;
+  double det = 1;
+
+  List<List<double>> upper = List.generate(n, (i) => List.generate(n, (j) => 0.0));
+
+  // Realizando la descomposición de la matriz
+  for (int i = 0; i < n; i++) {
+    // Inicializando todos los upper[i][i] como 1
+    upper[i][i] = 1;
+
+    // Encontrando el factor para actualizar la matriz inferior
+    // y colocarlo en lower[i][j]
+    for (int j = i; j < n; j++) {
+      double sum = 0;
+      for (int k = 0; k < i; k++) {
+        sum += (upper[k][j] * matriz[i][k]);
+      }
+      matriz[i][j] = matriz[i][j] - sum;
+    }
+
+    // Encontrar la matriz triangular superior
+    for (int j = i + 1; j < n; j++) {
+      double sum = 0;
+      for (int k = 0; k < i; k++) {
+        sum += (upper[k][j] * matriz[i][k]);
+      }
+      upper[i][j] = (matriz[i][j] - sum) / matriz[i][i];
+    }
+  }
+
+  // El producto de las entradas diagonales de la matriz inferior
+  // proporciona el determinante
+  for (int i = 0; i < n; i++) {
+    det *= matriz[i][i];
+  }
+
+  return det;
 }
