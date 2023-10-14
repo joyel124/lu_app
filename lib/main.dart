@@ -171,6 +171,8 @@ class _MatrixLUState extends State<MatrixLU> {
                     const SizedBox(height: 12),
                     const Text('Matriz U:', style: labelStyle),
                     MatrixDisplay(matrix: u),
+                    const Text('Matriz L*U:', style: labelStyle),
+                    MatrixDisplay(matrix: multiply(l, u)),
                   ],
                 ),
               if (p != null)
