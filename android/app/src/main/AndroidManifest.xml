@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.joyel.lu_app">
     <application
-        android:label="Factorización LU"
+        android:label="FactoLu"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
         <activity
