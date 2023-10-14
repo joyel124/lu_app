@@ -93,7 +93,7 @@ class _MatrixLUState extends State<MatrixLU> {
               const SizedBox(height: 12),
               ElevatedButton(
                 onPressed: () {
-                  if (n > 0) {
+                  if (n >=3 && n <= 10) {
                     setState(() {
                       a = generarMatriz(n);
                       if(esMatrizValida(a)){
@@ -124,12 +124,19 @@ class _MatrixLUState extends State<MatrixLU> {
                             }
                           }
                         }
+                      }else{
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('La matriz no es valida'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
                       }
                     });
                   }else{
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('La matriz no es valida'),
+                        content: Text('El valor debe estar entre 3 y 10'),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -200,7 +207,7 @@ class MatrixDisplay extends StatelessWidget {
                 padding: const EdgeInsets.all(8.0),
                 child: Center(
                   child: Text(
-                    cell.toStringAsFixed(1),
+                    cell.toStringAsFixed(0),
                     style: const TextStyle(
                       color: primaryColor,
                       fontWeight: FontWeight.bold,
