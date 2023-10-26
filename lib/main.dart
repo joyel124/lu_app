@@ -1,5 +1,4 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 
 const primaryColor = Color(0xFF6200EE);
@@ -45,6 +44,7 @@ class MatrixLU extends StatefulWidget {
 class _MatrixLUState extends State<MatrixLU> {
 
   late int n;
+  late List<List<double>> g;//matriz generada
   late List<List<double>> a;
   late List<List<double>> l;
   late List<List<double>> u;
@@ -52,6 +52,7 @@ class _MatrixLUState extends State<MatrixLU> {
   bool isValid = false;
   _MatrixLUState() {
     n = 5; // Puedes establecer el valor inicial de 'n' aquí
+    g = List.generate(n, (i) => List.generate(n, (j) => 0.0));
     a = List.generate(n, (i) => List.generate(n, (j) => 0.0));
     l = List.generate(n, (i) => List.generate(n, (j) => 0.0));
     u = List.generate(n, (i) => List.generate(n, (j) => 0.0));
@@ -99,9 +100,15 @@ class _MatrixLUState extends State<MatrixLU> {
                 onPressed: isValid? () {
                   if (n >=4 && n <= 10) {
                     setState(() {
-                      a = generarMatriz(n);
-                      p = permute(a)[1];
-                      a = permute(a)[0];
+                      /*g = [
+                        [0.0, 2.0, 1.0, 7.0],
+                        [4.0, 8.0, 1.0, 6.0],
+                        [2.0, 7.0, 9.0, 5.0],
+                        [3.0, 4.0, 5.0, 1.0]
+                      ];*/
+                      g = generarMatriz(n);
+                      p = permute(g)[1];
+                      a = permute(g)[0];
                       if(esMatrizValida(a)){
                         l = List.generate(n, (i) => List.filled(n, 0.0));
                         u = List.generate(n, (i) => List.filled(n, 0.0));
@@ -155,16 +162,16 @@ class _MatrixLUState extends State<MatrixLU> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                child: const Text('Calcular Factorización LU',
+                child: const Text('Generar',
                   style: labelStyleButton
                 ),
               ),
-              if (a != null && l != null && u != null)
+              if (a != null && l != null && u != null && p == null)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text('Matriz A:', style: labelStyle),
-                    MatrixDisplay(matrix: a),
+                    MatrixDisplay(matrix: g),
                     const SizedBox(height: 12), // espacio entre las matrices y textos
                     const Text('Matriz L:', style: labelStyle),
                     MatrixDisplay(matrix: l),
@@ -175,16 +182,26 @@ class _MatrixLUState extends State<MatrixLU> {
                     MatrixDisplay(matrix: multiply(l, u)),
                   ],
                 ),
-              if (p != null)
+              if (a != null && l != null && u != null && p != null)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const Text('Matriz A:', style: labelStyle),
+                    MatrixDisplay(matrix: g),
+                    const SizedBox(height: 12), // espacio entre las matrices y textos
+                    const Text('Matriz L:', style: labelStyle),
+                    MatrixDisplay(matrix: l),
+                    const SizedBox(height: 12),
+                    const Text('Matriz U:', style: labelStyle),
+                    MatrixDisplay(matrix: u),
+                    const SizedBox(height: 12),
                     const Text('Matriz Pt:', style: labelStyle),
                     MatrixDisplay(matrix: p!),
+                    const SizedBox(height: 12),
                     // Asumiendo que tienes una función `multiplyMatrices` que
                     // multiplica dos matrices y devuelve el resultado
                     const Text('Comprobando: Pt * L * U:', style: labelStyle),
-                    MatrixDisplay(matrix: a),//multiply(multiply(p!, l), u)
+                    MatrixDisplay(matrix: multiply(multiply(p!, l), u)),//
                   ],
                 ),
             ],
@@ -259,14 +276,6 @@ bool esMatrizValida(List<List<double>> matriz) {
       return false;
     }
   }
-
-  // Comprobación de ceros en la diagonal principal
-  /*for (int i = 0; i < n; i++) {
-    if (matriz[i][i] == 0) {
-      return false;
-    }
-  }*/
-
   return true;
 }
 
@@ -338,38 +347,53 @@ double determinante(List<List<double>> matriz) {
   int n = matriz.length;
   double det = 1;
 
-  List<List<double>> upper = List.generate(n, (i) => List.generate(n, (j) => 0.0));
+  // Registro de pivotes para cambios de fila
+  List<int> pivot = List.generate(n, (i) => i);
 
-  // Realizando la descomposición de la matriz
+  // Descomposición LU con pivoteo
   for (int i = 0; i < n; i++) {
-    // Inicializando todos los upper[i][i] como 1
-    upper[i][i] = 1;
-
-    // Encontrando el factor para actualizar la matriz inferior
-    // y colocarlo en lower[i][j]
-    for (int j = i; j < n; j++) {
-      double sum = 0;
-      for (int k = 0; k < i; k++) {
-        sum += (upper[k][j] * matriz[i][k]);
-      }
-      matriz[i][j] = matriz[i][j] - sum;
-    }
-
-    // Encontrar la matriz triangular superior
+    // Pivoteo: buscar el máximo en la columna actual
+    double maxElement = matriz[i][i];
+    int maxRow = i;
     for (int j = i + 1; j < n; j++) {
-      double sum = 0;
-      for (int k = 0; k < i; k++) {
-        sum += (upper[k][j] * matriz[i][k]);
+      if (matriz[j][i].abs() > maxElement.abs()) {
+        maxElement = matriz[j][i];
+        maxRow = j;
       }
-      upper[i][j] = (matriz[i][j] - sum) / matriz[i][i];
     }
-  }
 
-  // El producto de las entradas diagonales de la matriz inferior
-  // proporciona el determinante
-  for (int i = 0; i < n; i++) {
+    // Intercambiar filas si se encuentra un elemento más grande
+    if (maxRow != i) {
+      List<double> temp = matriz[i];
+      matriz[i] = matriz[maxRow];
+      matriz[maxRow] = temp;
+
+      // Cambio en el registro de pivote
+      int tempPivot = pivot[i];
+      pivot[i] = pivot[maxRow];
+      pivot[maxRow] = tempPivot;
+
+      // Ajuste del signo del determinante
+      det *= -1;
+    }
+
+    // Descomposición LU a partir de aquí
+    for (int k = i + 1; k < n; k++) {
+      double factor = matriz[k][i] / matriz[i][i];
+      for (int j = i; j < n; j++) {
+        matriz[k][j] -= factor * matriz[i][j];
+      }
+    }
+
+    // Si un elemento diagonal es 0, el determinante es 0
+    if (matriz[i][i] == 0) {
+      return 0;
+    }
+
+    // Factor en el producto para el cálculo del determinante
     det *= matriz[i][i];
   }
 
   return det;
 }
+
